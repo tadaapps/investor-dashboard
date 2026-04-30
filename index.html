@@ -540,7 +540,7 @@ footer {
       <div class="add-quarter-form">
         <input type="text" id="newQName" placeholder="e.g. Q3 2026" />
         <input type="text" id="newQDates" placeholder="e.g. Aug – Oct 2026" />
-        <input type="text" id="newQSheetId" placeholder="2PACX-1vTkEFXPHXSPzHdaNW6M3zjUNdI8KXoSXrNxXStC_-DeXnW02inx0_ONCWfuDidFH4GPk0k1h0Fk2tDA" />
+        <input type="text" id="newQSheetId" placeholder="Google Sheet ID (optional)" />
         <button class="btn-add" onclick="addQuarter()">+ Add quarter</button>
       </div>
     </div>
@@ -665,152 +665,168 @@ function addQuarter() {
 }
 
 // ─── DUMMY DATA (replace with Google Sheets fetch) ────────────────────────────
-function getDummyData(quarterId) {
-  return {
-    weekOf: 'May 5, 2026',
-    quarter: activeQuarter.name,
-    quarterDates: activeQuarter.dates,
+// ─── GOOGLE SHEETS CONFIG ─────────────────────────────────────────────────────
+const SHEET_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTkEFXPHXSPzHdaNW6M3zjUNdI8KXoSXrNxXStC_-DeXnW02inx0_ONCWfuDidFH4GPk0k1h0Fk2tDA/pub';
+const GIDS = { kpis: 0, okrs: 716426253, team: 980783163, milestones: 2093150374 };
+function sheetUrl(gid) { return SHEET_BASE + '?gid=' + gid + '&single=true&output=csv'; }
 
-    // Overview
-    totalUsers: 1240,
-    totalUsersDelta: '+18% WoW',
-    totalUsersDeltaType: 'up',
-    newUsers: 186,
-    newUsersDelta: '+22 vs last week',
-    newUsersDeltaType: 'up',
-    weeklyGrowth: '17.7%',
-    monthlyGrowth: '34.2%',
-    dau: 430,
-    dauDelta: '+8% WoW',
-    dauDeltaType: 'up',
-    mau: 980,
-    mauDelta: '+12% MoM',
-    mauDeltaType: 'up',
-    retention: '62%',
-    retentionDelta: '▲ improving (target 80%)',
-    retentionDeltaType: 'up',
-    referralRate: '8.4%',
-    referralRateDelta: '+1.2pts WoW',
-    referralRateDeltaType: 'up',
-
-    // Engagement
-    dauMauRatio: '43.9%',
-    kFactor: '0.31',
-    kFactorDelta: '+0.04 WoW',
-    kFactorDeltaType: 'up',
-    referralsWeek: 104,
-    referralsDelta: '+14 vs last week',
-    referralsDeltaType: 'up',
-    uninstallRate: '9.2%',
-    uninstallDelta: '▼ below 20% target ✓',
-    uninstallDeltaType: 'up',
-    wishjarUsers: 312,
-    wishjarDelta: '+28 this week',
-    wishjarDeltaType: 'up',
-    wishjarContribs: 847,
-    wishjarPct: '25.2%',
-
-    // Revenue (investor-only)
-    mrr: '$4,820',
-    mrrDelta: '+22% MoM',
-    mrrDeltaType: 'up',
-    arr: '$57,840',
-    margin: '68%',
-    marginDelta: '▲ 3pts MoM',
-    marginDeltaType: 'up',
-    runway: '22 mo',
-    autoclub: 3,
-    autoclubDelta: 'target: 500',
-    autoclubDeltaType: 'flat',
-    celebrations: 3,
-    celebrationsDelta: 'target: 500',
-    celebrationsDeltaType: 'flat',
-    aiCredits: 18,
-    aiCreditsDelta: '+6 this week',
-    aiCreditsDeltaType: 'up',
-    payg: 42,
-    paygDelta: '+9 this week',
-    paygDeltaType: 'up',
-    adsRevenue: '$210',
-    adsDelta: '+$40 WoW',
-    adsDeltaType: 'up',
-    cac: '$18',
-    ltv: '$144',
-    ltvRatio: 'LTV:CAC 8x',
-
-    // Charts
-    growthLabels: ['Wk1','Wk2','Wk3','Wk4','Wk5'],
-    growthData: [420, 620, 860, 1054, 1240],
-    mrrLabels: ['May W1','May W2','May W3','May W4','Jun W1'],
-    mrrData: [1200, 1900, 2800, 3700, 4820],
-    retentionLabels: ['D1','D3','D7','D14','D30'],
-    retentionData: [85, 74, 62, 51, 38],
-    referralLabels: ['Wk1','Wk2','Wk3','Wk4','Wk5'],
-    referralData: [12, 28, 55, 90, 104],
-    subLabels: ['AutoClub','Celebrations','AI Credits','Pay-as-go'],
-    subData: [3, 3, 18, 42],
-
-    // OKRs
-    okrs: [
-      {
-        id:1, obj:'Reach 1,000 Celebrations Club users',
-        pct: 0.3,
-        krs: [
-          { label:'Celebrations Circle users', current:3, target:1000, pct:0.3 }
-        ]
-      },
-      {
-        id:2, obj:'Reach 80% user retention',
-        pct: 11.5,
-        krs: [
-          { label:'App uninstall rate < 20%', current:'9.2%', target:'< 20%', pct:100 },
-          { label:'Overall retention rate', current:'62%', target:'80%', pct:77.5 }
-        ]
-      },
-      {
-        id:3, obj:'Reach 500 AutoClub subscriptions',
-        pct: 0.6,
-        krs: [
-          { label:'AutoClub new subscriptions', current:3, target:500, pct:0.6 }
-        ]
-      },
-      {
-        id:4, obj:'Reach 500 Celebrations Club subscriptions',
-        pct: 0.6,
-        krs: [
-          { label:'Celebrations Club new subscriptions', current:3, target:500, pct:0.6 }
-        ]
-      },
-      {
-        id:5, obj:'50% of users have WishJar contributions',
-        pct: 50.4,
-        krs: [
-          { label:'% users with WishJar activity', current:'25.2%', target:'50%', pct:50.4 }
-        ]
-      }
-    ],
-
-    // Team
-    team: [
-      { role:'CEO / Co-founder', status:'filled', since:'Founding' },
-      { role:'CTO / Co-founder', status:'filled', since:'Founding' },
-      { role:'Product Designer', status:'open', since:'' },
-      { role:'Backend Engineer', status:'interviewing', since:'' },
-      { role:'Growth & Marketing', status:'open', since:'' },
-    ],
-
-    // Milestones
-    milestones: [
-      { text:'Product concept & MVP spec', date:'Apr 2026', status:'done' },
-      { text:'Private alpha — 50 users', date:'May 15, 2026', status:'progress' },
-      { text:'AutoClub beta launch', date:'Jun 1, 2026', status:'upcoming' },
-      { text:'Celebrations Club GA', date:'Jun 15, 2026', status:'upcoming' },
-      { text:'WishJar public launch', date:'Jul 1, 2026', status:'upcoming' },
-      { text:'Series A preparation', date:'Jul 2026', status:'upcoming' },
-    ]
-  };
+function parseCSV(text) {
+  const lines = text.trim().split('
+');
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  return lines.slice(1).map(line => {
+    const cols = []; let cur = '', inQ = false;
+    for (let c of line) {
+      if (c === '"') inQ = !inQ;
+      else if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+      else cur += c;
+    }
+    cols.push(cur.trim());
+    const row = {};
+    headers.forEach((h, i) => row[h] = (cols[i] || '').replace(/^"|"$/g, '').trim());
+    return row;
+  }).filter(r => Object.values(r).some(v => v));
 }
 
+function calcDelta(curr, prev) {
+  const c = parseFloat(curr), p = parseFloat(prev);
+  if (!prev || isNaN(c) || isNaN(p) || p === 0) return { text: '—', type: 'flat' };
+  const pct = (((c-p)/p)*100).toFixed(1);
+  const dir = c >= p ? 'up' : 'down';
+  return { text: (c>=p?'▲':'▼')+' '+Math.abs(pct)+'% WoW', type: dir };
+}
+
+function showLoading() { document.getElementById('lastUpdated').innerHTML = '<span style="color:var(--accent)">⟳ Loading live data from Google Sheets…</span>'; }
+function showError(msg) { document.getElementById('lastUpdated').innerHTML = '<span style="color:var(--red)">⚠ ' + msg + ' — showing cached data</span>'; }
+
+function getFallbackOKRs() {
+  return [
+    { id:1, obj:'Reach 1,000 Celebrations Club users', pct:0.3, krs:[{ label:'Celebrations Circle users', current:3, target:1000, pct:0.3 }] },
+    { id:2, obj:'Reach 80% user retention', pct:11.5, krs:[{ label:'App uninstall rate < 20%', current:'9.2%', target:'<20%', pct:100 },{ label:'Overall retention', current:'62%', target:'80%', pct:77.5 }] },
+    { id:3, obj:'Reach 500 AutoClub subscriptions', pct:0.6, krs:[{ label:'AutoClub subscriptions', current:3, target:500, pct:0.6 }] },
+    { id:4, obj:'Reach 500 Celebrations Club subscriptions', pct:0.6, krs:[{ label:'Celebrations Club subscriptions', current:3, target:500, pct:0.6 }] },
+    { id:5, obj:'50% of users have WishJar contributions', pct:50.4, krs:[{ label:'% users with WishJar activity', current:'25.2%', target:'50%', pct:50.4 }] },
+  ];
+}
+function getFallbackTeam() {
+  return [
+    { role:'CEO / Co-founder', status:'filled', since:'Founding' },
+    { role:'CTO / Co-founder', status:'filled', since:'Founding' },
+    { role:'Product Designer', status:'open', since:'' },
+    { role:'Backend Engineer', status:'interviewing', since:'' },
+    { role:'Growth & Marketing', status:'open', since:'' },
+  ];
+}
+function getFallbackMilestones() {
+  return [
+    { text:'Product concept & MVP spec', date:'Apr 2026', status:'done' },
+    { text:'Private alpha — 50 users', date:'May 15, 2026', status:'progress' },
+    { text:'AutoClub beta launch', date:'Jun 1, 2026', status:'upcoming' },
+    { text:'Celebrations Club GA', date:'Jun 15, 2026', status:'upcoming' },
+    { text:'WishJar public launch', date:'Jul 1, 2026', status:'upcoming' },
+    { text:'Series A preparation', date:'Jul 2026', status:'upcoming' },
+  ];
+}
+
+async function fetchSheetData() {
+  showLoading();
+  try {
+    const [kpisRaw, okrsRaw, teamRaw, msRaw] = await Promise.all([
+      fetch(sheetUrl(GIDS.kpis)).then(r => r.text()),
+      fetch(sheetUrl(GIDS.okrs)).then(r => r.text()),
+      fetch(sheetUrl(GIDS.team)).then(r => r.text()),
+      fetch(sheetUrl(GIDS.milestones)).then(r => r.text()),
+    ]);
+    const kpiRows = parseCSV(kpisRaw);
+    const okrRows = parseCSV(okrsRaw);
+    const teamRows = parseCSV(teamRaw);
+    const msRows = parseCSV(msRaw);
+    const latest = kpiRows[kpiRows.length-1] || {};
+    const prev = kpiRows[kpiRows.length-2] || {};
+    const fmtCur = v => v ? '$'+parseFloat(v).toLocaleString() : '—';
+    const fmtPct = v => v ? v+'%' : '—';
+    const mrr = parseFloat(latest.mrr)||0;
+    const dau = parseFloat(latest.dau)||0;
+    const mau = parseFloat(latest.mau)||1;
+    const ltv = parseFloat(latest.ltv)||0;
+    const cac = parseFloat(latest.cac)||1;
+    const wishjarUsers = parseFloat(latest.wishjar_users)||0;
+    const totalUsers = parseFloat(latest.total_users)||1;
+    const autoclubN = parseFloat(latest.autoclub_subs)||0;
+    const celebN = parseFloat(latest.celebrations_subs)||0;
+    const aiN = parseFloat(latest.ai_credits_subs)||0;
+    const paygN = parseFloat(latest.payg_users)||0;
+    const growthLabels = kpiRows.map(r=>r.week_of||'').slice(-8);
+    const growthData = kpiRows.map(r=>parseFloat(r.total_users)||0).slice(-8);
+    const mrrLabels = kpiRows.map(r=>r.week_of||'').slice(-8);
+    const mrrData = kpiRows.map(r=>parseFloat(r.mrr)||0).slice(-8);
+    const referralLabels = kpiRows.map(r=>r.week_of||'').slice(-6);
+    const referralData = kpiRows.map(r=>parseFloat(r.referrals_week)||0).slice(-6);
+    const okrMap = {};
+    okrRows.forEach(r => {
+      const obj = r.objective||r.Objective||''; if(!obj) return;
+      if(!okrMap[obj]) okrMap[obj] = { obj, krs:[], pcts:[] };
+      const pct = parseFloat(r.pct_complete||0);
+      okrMap[obj].krs.push({ label:r.key_result||'', current:r.current||'', target:r.target||'', pct });
+      okrMap[obj].pcts.push(pct);
+    });
+    const okrs = Object.values(okrMap).map((o,i)=>({ id:i+1, obj:o.obj, pct:o.pcts.reduce((a,b)=>a+b,0)/(o.pcts.length||1), krs:o.krs }));
+    const team = teamRows.map(r=>({ role:r.role||'', status:(r.status||'open').toLowerCase(), since:r.since||'' }));
+    const milestones = msRows.map(r=>({ text:r.milestone||'', date:r.due_date||'', status:(r.status||'upcoming').toLowerCase() }));
+    const weekOf = latest.week_of || new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    document.getElementById('lastUpdated').textContent = 'Last updated: '+weekOf+' · Live from Google Sheets ✓';
+    return {
+      weekOf, quarter:activeQuarter.name, quarterDates:activeQuarter.dates,
+      totalUsers:parseFloat(latest.total_users)||0,
+      totalUsersDelta:calcDelta(latest.total_users,prev.total_users).text,
+      totalUsersDeltaType:calcDelta(latest.total_users,prev.total_users).type,
+      newUsers:parseFloat(latest.new_users)||0,
+      newUsersDelta:latest.new_users?'+'+latest.new_users+' this week':'—', newUsersDeltaType:'up',
+      weeklyGrowth:latest.weekly_growth_pct?latest.weekly_growth_pct+'%':'—',
+      monthlyGrowth:latest.monthly_growth_pct?latest.monthly_growth_pct+'%':'—',
+      dau, dauDelta:calcDelta(latest.dau,prev.dau).text, dauDeltaType:calcDelta(latest.dau,prev.dau).type,
+      mau, mauDelta:calcDelta(latest.mau,prev.mau).text, mauDeltaType:calcDelta(latest.mau,prev.mau).type,
+      retention:fmtPct(latest.retention_pct), retentionDelta:'target: 80%', retentionDeltaType:parseFloat(latest.retention_pct)>=80?'up':'flat',
+      referralRate:fmtPct(latest.referral_rate_pct),
+      referralRateDelta:calcDelta(latest.referral_rate_pct,prev.referral_rate_pct).text,
+      referralRateDeltaType:calcDelta(latest.referral_rate_pct,prev.referral_rate_pct).type,
+      dauMauRatio:mau>0?((dau/mau)*100).toFixed(1)+'%':'—',
+      kFactor:latest.kfactor||'—',
+      kFactorDelta:calcDelta(latest.kfactor,prev.kfactor).text, kFactorDeltaType:calcDelta(latest.kfactor,prev.kfactor).type,
+      referralsWeek:parseFloat(latest.referrals_week)||0,
+      referralsDelta:calcDelta(latest.referrals_week,prev.referrals_week).text, referralsDeltaType:calcDelta(latest.referrals_week,prev.referrals_week).type,
+      uninstallRate:fmtPct(latest.uninstall_rate_pct),
+      uninstallDelta:parseFloat(latest.uninstall_rate_pct)<20?'✓ below 20% target':'⚠ above target',
+      uninstallDeltaType:parseFloat(latest.uninstall_rate_pct)<20?'up':'down',
+      wishjarUsers, wishjarDelta:calcDelta(latest.wishjar_users,prev.wishjar_users).text, wishjarDeltaType:calcDelta(latest.wishjar_users,prev.wishjar_users).type,
+      wishjarContribs:parseFloat(latest.wishjar_contributions)||0,
+      wishjarPct:latest.wishjar_pct||((wishjarUsers/totalUsers*100).toFixed(1)+'%'),
+      mrr:fmtCur(latest.mrr), mrrDelta:calcDelta(latest.mrr,prev.mrr).text, mrrDeltaType:calcDelta(latest.mrr,prev.mrr).type,
+      arr:'$'+(mrr*12).toLocaleString(),
+      margin:fmtPct(latest.gross_margin_pct), marginDelta:calcDelta(latest.gross_margin_pct,prev.gross_margin_pct).text, marginDeltaType:calcDelta(latest.gross_margin_pct,prev.gross_margin_pct).type,
+      runway:latest.runway_months?latest.runway_months+' mo':'—',
+      autoclub:autoclubN, autoclubDelta:calcDelta(latest.autoclub_subs,prev.autoclub_subs).text, autoclubDeltaType:calcDelta(latest.autoclub_subs,prev.autoclub_subs).type,
+      celebrations:celebN, celebrationsDelta:calcDelta(latest.celebrations_subs,prev.celebrations_subs).text, celebrationsDeltaType:calcDelta(latest.celebrations_subs,prev.celebrations_subs).type,
+      aiCredits:aiN, aiCreditsDelta:calcDelta(latest.ai_credits_subs,prev.ai_credits_subs).text, aiCreditsDeltaType:calcDelta(latest.ai_credits_subs,prev.ai_credits_subs).type,
+      payg:paygN, paygDelta:calcDelta(latest.payg_users,prev.payg_users).text, paygDeltaType:calcDelta(latest.payg_users,prev.payg_users).type,
+      adsRevenue:fmtCur(latest.ads_revenue), adsDelta:calcDelta(latest.ads_revenue,prev.ads_revenue).text, adsDeltaType:calcDelta(latest.ads_revenue,prev.ads_revenue).type,
+      cac:fmtCur(latest.cac), ltv:fmtCur(latest.ltv), ltvRatio:'LTV:CAC '+(ltv/cac).toFixed(1)+'x',
+      growthLabels, growthData, mrrLabels, mrrData,
+      retentionLabels:['D1','D3','D7','D14','D30'],
+      retentionData:[parseFloat(latest.retention_d1)||85,parseFloat(latest.retention_d3)||74,parseFloat(latest.retention_d7||latest.retention_pct)||62,parseFloat(latest.retention_d14)||51,parseFloat(latest.retention_d30)||38],
+      referralLabels, referralData,
+      subLabels:['AutoClub','Celebrations','AI Credits','Pay-as-go'], subData:[autoclubN,celebN,aiN,paygN],
+      okrs:okrs.length?okrs:getFallbackOKRs(),
+      team:team.length?team:getFallbackTeam(),
+      milestones:milestones.length?milestones:getFallbackMilestones(),
+    };
+  } catch(err) {
+    console.error('Sheet fetch error:', err);
+    showError('Could not reach Google Sheets');
+    return { weekOf:new Date().toLocaleDateString(), quarter:activeQuarter.name, quarterDates:activeQuarter.dates, totalUsers:0, totalUsersDelta:'—', totalUsersDeltaType:'flat', newUsers:0, newUsersDelta:'—', newUsersDeltaType:'flat', weeklyGrowth:'—', monthlyGrowth:'—', dau:0, dauDelta:'—', dauDeltaType:'flat', mau:0, mauDelta:'—', mauDeltaType:'flat', retention:'—', retentionDelta:'—', retentionDeltaType:'flat', referralRate:'—', referralRateDelta:'—', referralRateDeltaType:'flat', dauMauRatio:'—', kFactor:'—', kFactorDelta:'—', kFactorDeltaType:'flat', referralsWeek:0, referralsDelta:'—', referralsDeltaType:'flat', uninstallRate:'—', uninstallDelta:'—', uninstallDeltaType:'flat', wishjarUsers:0, wishjarDelta:'—', wishjarDeltaType:'flat', wishjarContribs:0, wishjarPct:'—', mrr:'—', mrrDelta:'—', mrrDeltaType:'flat', arr:'—', margin:'—', marginDelta:'—', marginDeltaType:'flat', runway:'—', autoclub:0, autoclubDelta:'—', autoclubDeltaType:'flat', celebrations:0, celebrationsDelta:'—', celebrationsDeltaType:'flat', aiCredits:0, aiCreditsDelta:'—', aiCreditsDeltaType:'flat', payg:0, paygDelta:'—', paygDeltaType:'flat', adsRevenue:'—', adsDelta:'—', adsDeltaType:'flat', cac:'—', ltv:'—', ltvRatio:'—', growthLabels:[], growthData:[], mrrLabels:[], mrrData:[], retentionLabels:['D1','D3','D7','D14','D30'], retentionData:[0,0,0,0,0], referralLabels:[], referralData:[], subLabels:['AutoClub','Celebrations','AI Credits','Pay-as-go'], subData:[0,0,0,0], okrs:getFallbackOKRs(), team:getFallbackTeam(), milestones:getFallbackMilestones() };
+  }
+}
 // ─── CHART INSTANCES ──────────────────────────────────────────────────────────
 const chartInstances = {};
 function destroyChart(id) { if(chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; } }
@@ -843,8 +859,8 @@ function setDelta(id, val, type) {
   el.className='metric-delta delta-'+(type==='up'?'up':type==='down'?'down':'flat');
 }
 
-function initDashboard(investor) {
-  const d = getDummyData(activeQuarter.id);
+async function initDashboard(investor) {
+  const d = await fetchSheetData();
   document.getElementById('lastUpdated').textContent = `Last updated: ${d.weekOf} · Data from Google Sheets`;
   document.getElementById('overviewDesc').textContent = `Week of ${d.weekOf} · ${d.quarter} · ${d.quarterDates}`;
   document.getElementById('footerYear').textContent = new Date().getFullYear();
