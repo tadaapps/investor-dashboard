@@ -671,8 +671,7 @@ const GIDS = { kpis: 0, okrs: 716426253, team: 980783163, milestones: 2093150374
 function sheetUrl(gid) { return SHEET_BASE + '?gid=' + gid + '&single=true&output=csv'; }
 
 function parseCSV(text) {
-  const lines = text.trim().split('
-');
+  const lines = text.trim().split('\n');
   if (lines.length < 2) return [];
   const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
   return lines.slice(1).map(line => {
