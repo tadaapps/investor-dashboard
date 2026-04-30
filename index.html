@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ta-Da AI — Investor Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #13131a;
+  --surface2: #1c1c26;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text: #f0eff8;
+  --muted: #8888a8;
+  --hint: #55556a;
+  --accent: #c8a2ff;
+  --accent2: #7fd4c1;
+  --accent3: #ffb86c;
+  --accent4: #ff79c6;
+  --green: #6dcc8a;
+  --red: #ff6b6b;
+  --font-display: 'DM Serif Display', serif;
+  --font-body: 'DM Sans', sans-serif;
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 14px; line-height: 1.6; min-height: 100vh; }
+
+/* LOGIN OVERLAY */
+#loginOverlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+}
+.login-box {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: var(--radius); padding: 48px 40px; width: 360px; text-align: center;
+  animation: fadeUp 0.5s ease both;
+}
+.login-logo { font-family: var(--font-display); font-size: 28px; color: var(--accent); margin-bottom: 6px; }
+.login-sub { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+.login-box input {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: var(--radius-sm); padding: 12px 16px; color: var(--text);
+  font-family: var(--font-body); font-size: 14px; margin-bottom: 12px; outline: none;
+  transition: border-color 0.2s;
+}
+.login-box input:focus { border-color: var(--accent); }
+.login-box button {
+  width: 100%; background: var(--accent); color: #0a0a0f;
+  border: none; border-radius: var(--radius-sm); padding: 12px;
+  font-family: var(--font-body); font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: opacity 0.2s;
+}
+.login-box button:hover { opacity: 0.85; }
+.login-err { color: var(--red); font-size: 12px; margin-top: 8px; min-height: 16px; }
+.login-public { margin-top: 16px; }
+.login-public a { color: var(--accent2); font-size: 13px; text-decoration: none; cursor: pointer; }
+
+/* HEADER */
+header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,10,15,0.85); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px; height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.logo { font-family: var(--font-display); font-size: 20px; color: var(--accent); }
+.logo span { color: var(--muted); font-size: 13px; font-family: var(--font-body); margin-left: 10px; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.quarter-select {
+  background: var(--surface2); border: 1px solid var(--border2);
+  color: var(--text); border-radius: var(--radius-sm); padding: 6px 12px;
+  font-family: var(--font-body); font-size: 13px; cursor: pointer; outline: none;
+}
+.badge { font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: 500; }
+.badge-live { background: rgba(109,204,138,0.15); color: var(--green); border: 1px solid rgba(109,204,138,0.3); }
+.unlock-btn {
+  font-size: 12px; padding: 5px 12px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border2); background: transparent; color: var(--muted);
+  cursor: pointer; transition: all 0.2s;
+}
+.unlock-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* NAV TABS */
+.tab-nav {
+  display: flex; gap: 4px; padding: 20px 32px 0;
+  border-bottom: 1px solid var(--border);
+}
+.tab-btn {
+  padding: 8px 18px; font-size: 13px; font-family: var(--font-body);
+  background: transparent; border: none; color: var(--muted); cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s;
+}
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-btn:hover:not(.active) { color: var(--text); }
+
+/* MAIN */
+main { padding: 28px 32px 60px; max-width: 1200px; margin: 0 auto; }
+.section { display: none; }
+.section.active { display: block; animation: fadeUp 0.35s ease both; }
+
+/* SECTION HEADER */
+.section-title {
+  font-family: var(--font-display); font-size: 22px; color: var(--text);
+  margin-bottom: 4px;
+}
+.section-desc { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+
+/* GRID */
+.grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; margin-bottom: 24px; }
+
+/* METRIC CARD */
+.metric-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+  transition: border-color 0.2s;
+}
+.metric-card:hover { border-color: var(--border2); }
+.metric-label { font-size: 12px; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+.metric-value { font-size: 26px; font-weight: 500; color: var(--text); line-height: 1; }
+.metric-delta { font-size: 12px; margin-top: 6px; }
+.delta-up { color: var(--green); }
+.delta-down { color: var(--red); }
+.delta-flat { color: var(--muted); }
+.metric-card.accent-purple { border-left: 3px solid var(--accent); }
+.metric-card.accent-teal { border-left: 3px solid var(--accent2); }
+.metric-card.accent-amber { border-left: 3px solid var(--accent3); }
+.metric-card.accent-pink { border-left: 3px solid var(--accent4); }
+
+/* PANEL */
+.panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 22px;
+}
+.panel-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 16px; }
+
+/* OKR */
+.okr-list { display: flex; flex-direction: column; gap: 14px; }
+.okr-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+}
+.okr-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+.okr-obj { font-size: 15px; font-weight: 500; color: var(--text); }
+.okr-pct-wrap { display: flex; align-items: center; gap: 8px; }
+.okr-pct { font-size: 13px; color: var(--muted); }
+.okr-num { font-size: 20px; font-weight: 600; color: var(--accent); }
+.kr-row { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+.kr-label { font-size: 13px; color: var(--muted); flex: 1; min-width: 0; }
+.kr-numbers { font-size: 12px; color: var(--hint); white-space: nowrap; }
+.progress-track { flex: 0 0 140px; height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 2px; transition: width 1s ease; }
+
+/* TEAM TABLE */
+.team-table { width: 100%; border-collapse: collapse; }
+.team-table th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--hint); padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+.team-table td { padding: 10px 12px; font-size: 13px; color: var(--text); border-bottom: 1px solid var(--border); }
+.team-table tr:last-child td { border-bottom: none; }
+.status-pill { font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 500; }
+.pill-filled { background: rgba(109,204,138,0.12); color: var(--green); }
+.pill-open { background: rgba(255,184,108,0.12); color: var(--accent3); }
+.pill-interviewing { background: rgba(127,212,193,0.12); color: var(--accent2); }
+
+/* MILESTONE */
+.milestone-list { display: flex; flex-direction: column; gap: 0; }
+.milestone-item { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.milestone-item:last-child { border-bottom: none; }
+.m-icon { width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.m-done { background: var(--green); }
+.m-progress { background: var(--accent); }
+.m-upcoming { background: var(--hint); }
+.m-text { font-size: 13px; color: var(--text); }
+.m-date { font-size: 12px; color: var(--hint); margin-top: 2px; }
+
+/* CHART WRAP */
+.chart-wrap { position: relative; height: 200px; }
+
+/* QUARTER MANAGER */
+.quarter-manager {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px; margin-bottom: 20px;
+}
+.q-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.q-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 16px;
+}
+.q-name { font-size: 14px; color: var(--text); }
+.q-dates { font-size: 12px; color: var(--muted); }
+.q-active-badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; background: rgba(200,162,255,0.15); color: var(--accent); }
+.add-quarter-form { display: flex; gap: 10px; flex-wrap: wrap; }
+.add-quarter-form input, .add-quarter-form select {
+  background: var(--surface2); border: 1px solid var(--border2); color: var(--text);
+  border-radius: var(--radius-sm); padding: 8px 12px; font-family: var(--font-body);
+  font-size: 13px; outline: none; flex: 1; min-width: 120px;
+}
+.btn-add {
+  background: var(--accent); color: #0a0a0f; border: none;
+  border-radius: var(--radius-sm); padding: 8px 18px;
+  font-family: var(--font-body); font-size: 13px; font-weight: 600;
+  cursor: pointer; white-space: nowrap;
+}
+
+/* FOOTER */
+footer {
+  text-align: center; padding: 24px; color: var(--hint); font-size: 12px;
+  border-top: 1px solid var(--border);
+}
+
+/* LAST UPDATED */
+.last-updated { font-size: 12px; color: var(--hint); text-align: right; margin-bottom: 20px; }
+
+/* LOCKED OVERLAY for private sections */
+.locked-section {
+  position: relative; filter: blur(4px); pointer-events: none;
+  user-select: none; opacity: 0.4;
+}
+.lock-gate {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  z-index: 10; filter: none; opacity: 1;
+}
+.lock-card {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: var(--radius); padding: 28px 32px; text-align: center;
+}
+.lock-card p { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+
+/* PUBLIC NOTICE */
+.public-notice {
+  background: rgba(127,212,193,0.07); border: 1px solid rgba(127,212,193,0.2);
+  border-radius: var(--radius-sm); padding: 10px 16px;
+  font-size: 13px; color: var(--accent2); margin-bottom: 20px;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* RESPONSIVE */
+@media (max-width: 640px) {
+  main { padding: 16px; }
+  header { padding: 0 16px; }
+  .tab-nav { padding: 16px 16px 0; overflow-x: auto; }
+  .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN OVERLAY -->
+<div id="loginOverlay">
+  <div class="login-box">
+    <div class="login-logo">Ta-Da ✨ AI</div>
+    <div class="login-sub">Investor Dashboard · Q2 Launch Quarter</div>
+    <input type="password" id="pwInput" placeholder="Enter investor password" />
+    <button onclick="tryLogin()">Access full dashboard</button>
+    <div class="login-err" id="loginErr"></div>
+    <div class="login-public">
+      <a onclick="publicAccess()">View public overview instead →</a>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div class="logo">Ta-Da ✨ AI <span>Investor Dashboard</span></div>
+  </div>
+  <div class="header-right">
+    <select class="quarter-select" id="quarterSelect" onchange="switchQuarter(this.value)">
+      <option value="q2_2026">Q2 2026 — Launch Quarter</option>
+    </select>
+    <span class="badge badge-live">● Live</span>
+    <button class="unlock-btn" id="unlockBtn" onclick="showLogin()" style="display:none;">🔒 Investor view</button>
+  </div>
+</header>
+
+<!-- NAV TABS -->
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('overview', this)">Overview</button>
+  <button class="tab-btn" onclick="switchTab('engagement', this)">Engagement</button>
+  <button class="tab-btn" onclick="switchTab('revenue', this)">Revenue & KPIs</button>
+  <button class="tab-btn" onclick="switchTab('okrs', this)">OKRs</button>
+  <button class="tab-btn" onclick="switchTab('team', this)">Team & Milestones</button>
+  <button class="tab-btn" onclick="switchTab('settings', this)" id="settingsTab" style="display:none;">⚙ Quarters</button>
+</nav>
+
+<main>
+  <div class="last-updated" id="lastUpdated">Last updated: loading…</div>
+
+  <!-- ===== OVERVIEW ===== -->
+  <section id="overview" class="section active">
+    <div class="section-title">Good morning, investors 👋</div>
+    <div class="section-desc" id="overviewDesc">Week of — · Q2 2026 Launch Quarter · May – July 2026</div>
+
+    <div id="publicNotice" class="public-notice" style="display:none;">
+      You are viewing the <strong>public overview</strong>. Some metrics are available to investors only. <a onclick="showLogin()" style="color:var(--accent);cursor:pointer;text-decoration:underline;">Sign in →</a>
+    </div>
+
+    <div class="grid-4">
+      <div class="metric-card accent-purple">
+        <div class="metric-label">Total Users</div>
+        <div class="metric-value" id="ov-totalUsers">—</div>
+        <div class="metric-delta" id="ov-totalUsersDelta">—</div>
+      </div>
+      <div class="metric-card accent-teal">
+        <div class="metric-label">New Users This Week</div>
+        <div class="metric-value" id="ov-newUsers">—</div>
+        <div class="metric-delta" id="ov-newUsersDelta">—</div>
+      </div>
+      <div class="metric-card accent-amber">
+        <div class="metric-label">Weekly Growth</div>
+        <div class="metric-value" id="ov-weeklyGrowth">—</div>
+        <div class="metric-delta delta-flat">vs prior week</div>
+      </div>
+      <div class="metric-card accent-pink">
+        <div class="metric-label">Monthly Growth</div>
+        <div class="metric-value" id="ov-monthlyGrowth">—</div>
+        <div class="metric-delta delta-flat">vs prior month</div>
+      </div>
+    </div>
+
+    <div class="grid-4">
+      <div class="metric-card">
+        <div class="metric-label">DAU</div>
+        <div class="metric-value" id="ov-dau">—</div>
+        <div class="metric-delta" id="ov-dauDelta">—</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">MAU</div>
+        <div class="metric-value" id="ov-mau">—</div>
+        <div class="metric-delta" id="ov-mauDelta">—</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">User Retention</div>
+        <div class="metric-value" id="ov-retention">—</div>
+        <div class="metric-delta" id="ov-retentionDelta">—</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Referral Rate</div>
+        <div class="metric-value" id="ov-referral">—</div>
+        <div class="metric-delta" id="ov-referralDelta">—</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">User growth trend</div>
+        <div class="chart-wrap"><canvas id="growthChart"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Subscription breakdown</div>
+        <div class="chart-wrap"><canvas id="subChart"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ENGAGEMENT ===== -->
+  <section id="engagement" class="section">
+    <div class="section-title">User Engagement</div>
+    <div class="section-desc">Active users, retention, referrals and viral growth</div>
+
+    <div class="grid-4">
+      <div class="metric-card accent-purple">
+        <div class="metric-label">DAU / MAU ratio</div>
+        <div class="metric-value" id="eng-dauMau">—</div>
+        <div class="metric-delta delta-flat">stickiness</div>
+      </div>
+      <div class="metric-card accent-teal">
+        <div class="metric-label">Viral Coefficient (K)</div>
+        <div class="metric-value" id="eng-kFactor">—</div>
+        <div class="metric-delta" id="eng-kFactorDelta">—</div>
+      </div>
+      <div class="metric-card accent-amber">
+        <div class="metric-label">Referrals This Week</div>
+        <div class="metric-value" id="eng-referrals">—</div>
+        <div class="metric-delta" id="eng-referralsDelta">—</div>
+      </div>
+      <div class="metric-card accent-pink">
+        <div class="metric-label">App Uninstall Rate</div>
+        <div class="metric-value" id="eng-uninstall">—</div>
+        <div class="metric-delta" id="eng-uninstallDelta">—</div>
+      </div>
+    </div>
+
+    <div class="grid-3">
+      <div class="metric-card">
+        <div class="metric-label">WishJar Active Users</div>
+        <div class="metric-value" id="eng-wishjar">—</div>
+        <div class="metric-delta" id="eng-wishjarDelta">—</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">WishJar Contributions</div>
+        <div class="metric-value" id="eng-wishjarContrib">—</div>
+        <div class="metric-delta delta-flat">cumulative</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">% Users w/ WishJar</div>
+        <div class="metric-value" id="eng-wishjarPct">—</div>
+        <div class="metric-delta delta-flat">target: 50%</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">Retention curve</div>
+        <div class="chart-wrap"><canvas id="retentionChart"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Referrals over time</div>
+        <div class="chart-wrap"><canvas id="referralChart"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== REVENUE ===== -->
+  <section id="revenue" class="section">
+    <div class="section-title">Revenue & KPIs</div>
+    <div class="section-desc">Subscription products, ads, and core financial metrics</div>
+
+    <div id="revenueContent">
+      <div class="grid-4">
+        <div class="metric-card accent-purple">
+          <div class="metric-label">MRR</div>
+          <div class="metric-value" id="rev-mrr">—</div>
+          <div class="metric-delta" id="rev-mrrDelta">—</div>
+        </div>
+        <div class="metric-card accent-teal">
+          <div class="metric-label">ARR (run rate)</div>
+          <div class="metric-value" id="rev-arr">—</div>
+          <div class="metric-delta delta-flat">annualised</div>
+        </div>
+        <div class="metric-card accent-amber">
+          <div class="metric-label">Gross Margin</div>
+          <div class="metric-value" id="rev-margin">—</div>
+          <div class="metric-delta" id="rev-marginDelta">—</div>
+        </div>
+        <div class="metric-card accent-pink">
+          <div class="metric-label">Runway</div>
+          <div class="metric-value" id="rev-runway">—</div>
+          <div class="metric-delta delta-flat">months</div>
+        </div>
+      </div>
+
+      <div class="grid-4">
+        <div class="metric-card">
+          <div class="metric-label">AutoClub Subs</div>
+          <div class="metric-value" id="rev-autoclub">—</div>
+          <div class="metric-delta" id="rev-autoclubDelta">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Celebrations Club Subs</div>
+          <div class="metric-value" id="rev-celebrations">—</div>
+          <div class="metric-delta" id="rev-celebrationsDelta">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">AI Credits Subs</div>
+          <div class="metric-value" id="rev-aiCredits">—</div>
+          <div class="metric-delta" id="rev-aiCreditsDelta">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Pay-As-You-Go</div>
+          <div class="metric-value" id="rev-payg">—</div>
+          <div class="metric-delta" id="rev-paygDelta">—</div>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="metric-card">
+          <div class="metric-label">Ads Revenue</div>
+          <div class="metric-value" id="rev-ads">—</div>
+          <div class="metric-delta" id="rev-adsDelta">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">CAC</div>
+          <div class="metric-value" id="rev-cac">—</div>
+          <div class="metric-delta delta-flat">cost to acquire</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">LTV</div>
+          <div class="metric-value" id="rev-ltv">—</div>
+          <div class="metric-delta" id="rev-ltvRatio">—</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-title">MRR trend</div>
+          <div class="chart-wrap"><canvas id="mrrChart"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Revenue by product</div>
+          <div class="chart-wrap"><canvas id="revBreakdownChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== OKRs ===== -->
+  <section id="okrs" class="section">
+    <div class="section-title">OKRs — Q2 2026 Launch Quarter</div>
+    <div class="section-desc">May – July 2026 · 5 objectives</div>
+    <div class="okr-list" id="okrList"></div>
+  </section>
+
+  <!-- ===== TEAM ===== -->
+  <section id="team" class="section">
+    <div class="section-title">Team & Milestones</div>
+    <div class="section-desc">Headcount, open roles, and product roadmap</div>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">Team headcount</div>
+        <table class="team-table" id="teamTable"></table>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Product milestones</div>
+        <div class="milestone-list" id="milestoneList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SETTINGS ===== -->
+  <section id="settings" class="section">
+    <div class="section-title">Quarter management</div>
+    <div class="section-desc">Add new quarters or view historical data</div>
+    <div class="quarter-manager">
+      <div class="panel-title">All quarters</div>
+      <div class="q-list" id="quarterList"></div>
+      <div style="margin-top:20px;margin-bottom:12px;font-size:13px;color:var(--muted);">Add a new quarter</div>
+      <div class="add-quarter-form">
+        <input type="text" id="newQName" placeholder="e.g. Q3 2026" />
+        <input type="text" id="newQDates" placeholder="e.g. Aug – Oct 2026" />
+        <input type="text" id="newQSheetId" placeholder="Google Sheet ID (optional)" />
+        <button class="btn-add" onclick="addQuarter()">+ Add quarter</button>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:16px;">
+      <div class="panel-title">How to update data weekly</div>
+      <ol style="color:var(--muted);font-size:13px;line-height:2;padding-left:18px;">
+        <li>Open your <a href="https://docs.google.com/spreadsheets" target="_blank" style="color:var(--accent);">Google Sheet</a> (link in README)</li>
+        <li>Update the numbers in the relevant tab (KPIs, OKRs, Team, Milestones)</li>
+        <li>The dashboard auto-refreshes the next time anyone opens the link</li>
+        <li>To add a new quarter, use the form above and update the Sheet ID</li>
+      </ol>
+    </div>
+  </section>
+</main>
+
+<footer>
+  Ta-Da AI · Investor Dashboard · Confidential · <span id="footerYear"></span>
+</footer>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const PASSWORD = 'tadaai113355';
+const GITHUB_USER = 'tadaapps';
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let isInvestor = false;
+let isPublic = false;
+let quarters = JSON.parse(localStorage.getItem('tada_quarters') || 'null') || [
+  { id: 'q2_2026', name: 'Q2 2026 — Launch Quarter', dates: 'May – July 2026', active: true, sheetId: '' }
+];
+let activeQuarter = quarters.find(q => q.active) || quarters[0];
+
+// ─── AUTH ────────────────────────────────────────────────────────────────────
+function tryLogin() {
+  const val = document.getElementById('pwInput').value;
+  if (val === PASSWORD) {
+    isInvestor = true;
+    document.getElementById('loginOverlay').style.display = 'none';
+    document.getElementById('settingsTab').style.display = '';
+    initDashboard(true);
+  } else {
+    document.getElementById('loginErr').textContent = 'Incorrect password. Try again.';
+  }
+}
+document.getElementById('pwInput').addEventListener('keydown', e => { if(e.key==='Enter') tryLogin(); });
+
+function publicAccess() {
+  isPublic = true;
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('unlockBtn').style.display = '';
+  document.getElementById('publicNotice').style.display = '';
+  initDashboard(false);
+}
+
+function showLogin() {
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('pwInput').value = '';
+  document.getElementById('loginErr').textContent = '';
+}
+
+// ─── TABS ────────────────────────────────────────────────────────────────────
+function switchTab(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+
+// ─── QUARTERS ────────────────────────────────────────────────────────────────
+function saveQuarters() { localStorage.setItem('tada_quarters', JSON.stringify(quarters)); }
+
+function renderQuarterSelect() {
+  const sel = document.getElementById('quarterSelect');
+  sel.innerHTML = quarters.map(q => `<option value="${q.id}" ${q.id===activeQuarter.id?'selected':''}>${q.name}</option>`).join('');
+}
+
+function renderQuarterList() {
+  document.getElementById('quarterList').innerHTML = quarters.map(q => `
+    <div class="q-row">
+      <div>
+        <div class="q-name">${q.name} ${q.active ? '<span class="q-active-badge">Active</span>' : ''}</div>
+        <div class="q-dates">${q.dates}</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        ${!q.active ? `<button class="unlock-btn" onclick="setActiveQuarter('${q.id}')">Set active</button>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function switchQuarter(id) {
+  activeQuarter = quarters.find(q => q.id === id) || quarters[0];
+  initDashboard(isInvestor);
+}
+
+function setActiveQuarter(id) {
+  quarters.forEach(q => q.active = (q.id === id));
+  activeQuarter = quarters.find(q => q.id === id);
+  saveQuarters();
+  renderQuarterList();
+  renderQuarterSelect();
+  initDashboard(isInvestor);
+}
+
+function addQuarter() {
+  const name = document.getElementById('newQName').value.trim();
+  const dates = document.getElementById('newQDates').value.trim();
+  const sheetId = document.getElementById('newQSheetId').value.trim();
+  if (!name || !dates) { alert('Please enter a quarter name and date range.'); return; }
+  const id = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+  quarters.push({ id, name, dates, active: false, sheetId });
+  saveQuarters();
+  document.getElementById('newQName').value = '';
+  document.getElementById('newQDates').value = '';
+  document.getElementById('newQSheetId').value = '';
+  renderQuarterList();
+  renderQuarterSelect();
+  // Add to dropdown
+  const sel = document.getElementById('quarterSelect');
+  const opt = document.createElement('option');
+  opt.value = id; opt.textContent = name;
+  sel.appendChild(opt);
+}
+
+// ─── DUMMY DATA (replace with Google Sheets fetch) ────────────────────────────
+function getDummyData(quarterId) {
+  return {
+    weekOf: 'May 5, 2026',
+    quarter: activeQuarter.name,
+    quarterDates: activeQuarter.dates,
+
+    // Overview
+    totalUsers: 1240,
+    totalUsersDelta: '+18% WoW',
+    totalUsersDeltaType: 'up',
+    newUsers: 186,
+    newUsersDelta: '+22 vs last week',
+    newUsersDeltaType: 'up',
+    weeklyGrowth: '17.7%',
+    monthlyGrowth: '34.2%',
+    dau: 430,
+    dauDelta: '+8% WoW',
+    dauDeltaType: 'up',
+    mau: 980,
+    mauDelta: '+12% MoM',
+    mauDeltaType: 'up',
+    retention: '62%',
+    retentionDelta: '▲ improving (target 80%)',
+    retentionDeltaType: 'up',
+    referralRate: '8.4%',
+    referralRateDelta: '+1.2pts WoW',
+    referralRateDeltaType: 'up',
+
+    // Engagement
+    dauMauRatio: '43.9%',
+    kFactor: '0.31',
+    kFactorDelta: '+0.04 WoW',
+    kFactorDeltaType: 'up',
+    referralsWeek: 104,
+    referralsDelta: '+14 vs last week',
+    referralsDeltaType: 'up',
+    uninstallRate: '9.2%',
+    uninstallDelta: '▼ below 20% target ✓',
+    uninstallDeltaType: 'up',
+    wishjarUsers: 312,
+    wishjarDelta: '+28 this week',
+    wishjarDeltaType: 'up',
+    wishjarContribs: 847,
+    wishjarPct: '25.2%',
+
+    // Revenue (investor-only)
+    mrr: '$4,820',
+    mrrDelta: '+22% MoM',
+    mrrDeltaType: 'up',
+    arr: '$57,840',
+    margin: '68%',
+    marginDelta: '▲ 3pts MoM',
+    marginDeltaType: 'up',
+    runway: '22 mo',
+    autoclub: 3,
+    autoclubDelta: 'target: 500',
+    autoclubDeltaType: 'flat',
+    celebrations: 3,
+    celebrationsDelta: 'target: 500',
+    celebrationsDeltaType: 'flat',
+    aiCredits: 18,
+    aiCreditsDelta: '+6 this week',
+    aiCreditsDeltaType: 'up',
+    payg: 42,
+    paygDelta: '+9 this week',
+    paygDeltaType: 'up',
+    adsRevenue: '$210',
+    adsDelta: '+$40 WoW',
+    adsDeltaType: 'up',
+    cac: '$18',
+    ltv: '$144',
+    ltvRatio: 'LTV:CAC 8x',
+
+    // Charts
+    growthLabels: ['Wk1','Wk2','Wk3','Wk4','Wk5'],
+    growthData: [420, 620, 860, 1054, 1240],
+    mrrLabels: ['May W1','May W2','May W3','May W4','Jun W1'],
+    mrrData: [1200, 1900, 2800, 3700, 4820],
+    retentionLabels: ['D1','D3','D7','D14','D30'],
+    retentionData: [85, 74, 62, 51, 38],
+    referralLabels: ['Wk1','Wk2','Wk3','Wk4','Wk5'],
+    referralData: [12, 28, 55, 90, 104],
+    subLabels: ['AutoClub','Celebrations','AI Credits','Pay-as-go'],
+    subData: [3, 3, 18, 42],
+
+    // OKRs
+    okrs: [
+      {
+        id:1, obj:'Reach 1,000 Celebrations Club users',
+        pct: 0.3,
+        krs: [
+          { label:'Celebrations Circle users', current:3, target:1000, pct:0.3 }
+        ]
+      },
+      {
+        id:2, obj:'Reach 80% user retention',
+        pct: 11.5,
+        krs: [
+          { label:'App uninstall rate < 20%', current:'9.2%', target:'< 20%', pct:100 },
+          { label:'Overall retention rate', current:'62%', target:'80%', pct:77.5 }
+        ]
+      },
+      {
+        id:3, obj:'Reach 500 AutoClub subscriptions',
+        pct: 0.6,
+        krs: [
+          { label:'AutoClub new subscriptions', current:3, target:500, pct:0.6 }
+        ]
+      },
+      {
+        id:4, obj:'Reach 500 Celebrations Club subscriptions',
+        pct: 0.6,
+        krs: [
+          { label:'Celebrations Club new subscriptions', current:3, target:500, pct:0.6 }
+        ]
+      },
+      {
+        id:5, obj:'50% of users have WishJar contributions',
+        pct: 50.4,
+        krs: [
+          { label:'% users with WishJar activity', current:'25.2%', target:'50%', pct:50.4 }
+        ]
+      }
+    ],
+
+    // Team
+    team: [
+      { role:'CEO / Co-founder', status:'filled', since:'Founding' },
+      { role:'CTO / Co-founder', status:'filled', since:'Founding' },
+      { role:'Product Designer', status:'open', since:'' },
+      { role:'Backend Engineer', status:'interviewing', since:'' },
+      { role:'Growth & Marketing', status:'open', since:'' },
+    ],
+
+    // Milestones
+    milestones: [
+      { text:'Product concept & MVP spec', date:'Apr 2026', status:'done' },
+      { text:'Private alpha — 50 users', date:'May 15, 2026', status:'progress' },
+      { text:'AutoClub beta launch', date:'Jun 1, 2026', status:'upcoming' },
+      { text:'Celebrations Club GA', date:'Jun 15, 2026', status:'upcoming' },
+      { text:'WishJar public launch', date:'Jul 1, 2026', status:'upcoming' },
+      { text:'Series A preparation', date:'Jul 2026', status:'upcoming' },
+    ]
+  };
+}
+
+// ─── CHART INSTANCES ──────────────────────────────────────────────────────────
+const chartInstances = {};
+function destroyChart(id) { if(chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; } }
+
+function mkChart(id, type, labels, datasets, opts={}) {
+  destroyChart(id);
+  const ctx = document.getElementById(id);
+  if(!ctx) return;
+  chartInstances[id] = new Chart(ctx, {
+    type,
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: opts.legend || false, labels: { color:'#8888a8', font:{size:11}, boxWidth:10 } } },
+      scales: type === 'pie' || type === 'doughnut' ? {} : {
+        x: { grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'#8888a8', font:{size:11}} },
+        y: { grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'#8888a8', font:{size:11}, callback: opts.yCallback || undefined } }
+      },
+      ...opts.extra
+    }
+  });
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function set(id, val) { const el=document.getElementById(id); if(el) el.textContent=val; }
+function setDelta(id, val, type) {
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.textContent=val;
+  el.className='metric-delta delta-'+(type==='up'?'up':type==='down'?'down':'flat');
+}
+
+function initDashboard(investor) {
+  const d = getDummyData(activeQuarter.id);
+  document.getElementById('lastUpdated').textContent = `Last updated: ${d.weekOf} · Data from Google Sheets`;
+  document.getElementById('overviewDesc').textContent = `Week of ${d.weekOf} · ${d.quarter} · ${d.quarterDates}`;
+  document.getElementById('footerYear').textContent = new Date().getFullYear();
+  renderQuarterSelect();
+
+  // Overview
+  set('ov-totalUsers', d.totalUsers.toLocaleString());
+  setDelta('ov-totalUsersDelta', d.totalUsersDelta, d.totalUsersDeltaType);
+  set('ov-newUsers', d.newUsers.toLocaleString());
+  setDelta('ov-newUsersDelta', d.newUsersDelta, d.newUsersDeltaType);
+  set('ov-weeklyGrowth', d.weeklyGrowth);
+  set('ov-monthlyGrowth', d.monthlyGrowth);
+  set('ov-dau', d.dau.toLocaleString());
+  setDelta('ov-dauDelta', d.dauDelta, d.dauDeltaType);
+  set('ov-mau', d.mau.toLocaleString());
+  setDelta('ov-mauDelta', d.mauDelta, d.mauDeltaType);
+  set('ov-retention', d.retention);
+  setDelta('ov-retentionDelta', d.retentionDelta, d.retentionDeltaType);
+  set('ov-referral', d.referralRate);
+  setDelta('ov-referralDelta', d.referralRateDelta, d.referralRateDeltaType);
+
+  // Engagement
+  set('eng-dauMau', d.dauMauRatio);
+  set('eng-kFactor', d.kFactor);
+  setDelta('eng-kFactorDelta', d.kFactorDelta, d.kFactorDeltaType);
+  set('eng-referrals', d.referralsWeek);
+  setDelta('eng-referralsDelta', d.referralsDelta, d.referralsDeltaType);
+  set('eng-uninstall', d.uninstallRate);
+  setDelta('eng-uninstallDelta', d.uninstallDelta, d.uninstallDeltaType);
+  set('eng-wishjar', d.wishjarUsers.toLocaleString());
+  setDelta('eng-wishjarDelta', d.wishjarDelta, d.wishjarDeltaType);
+  set('eng-wishjarContrib', d.wishjarContribs.toLocaleString());
+  set('eng-wishjarPct', d.wishjarPct);
+
+  // Revenue — only show if investor
+  const revContent = document.getElementById('revenueContent');
+  if(investor) {
+    revContent.innerHTML = revContent.innerHTML; // keep
+    set('rev-mrr', d.mrr); setDelta('rev-mrrDelta', d.mrrDelta, d.mrrDeltaType);
+    set('rev-arr', d.arr);
+    set('rev-margin', d.margin); setDelta('rev-marginDelta', d.marginDelta, d.marginDeltaType);
+    set('rev-runway', d.runway);
+    set('rev-autoclub', d.autoclub); setDelta('rev-autoclubDelta', d.autoclubDelta, d.autoclubDeltaType);
+    set('rev-celebrations', d.celebrations); setDelta('rev-celebrationsDelta', d.celebrationsDelta, d.celebrationsDeltaType);
+    set('rev-aiCredits', d.aiCredits); setDelta('rev-aiCreditsDelta', d.aiCreditsDelta, d.aiCreditsDeltaType);
+    set('rev-payg', d.payg); setDelta('rev-paygDelta', d.paygDelta, d.paygDeltaType);
+    set('rev-ads', d.adsRevenue); setDelta('rev-adsDelta', d.adsDelta, d.adsDeltaType);
+    set('rev-cac', d.cac);
+    set('rev-ltv', d.ltv); setDelta('rev-ltvRatio', d.ltvRatio, 'flat');
+  } else {
+    revContent.innerHTML = `<div style="text-align:center;padding:60px 20px;">
+      <div style="font-size:32px;margin-bottom:12px;">🔒</div>
+      <div style="color:var(--muted);font-size:14px;margin-bottom:16px;">Revenue details are available to investors only.</div>
+      <button class="btn-add" onclick="showLogin()">Sign in as investor</button>
+    </div>`;
+  }
+
+  // OKRs
+  const colors = ['#c8a2ff','#7fd4c1','#ffb86c','#ff79c6','#6dcc8a'];
+  document.getElementById('okrList').innerHTML = d.okrs.map((o,i) => `
+    <div class="okr-card">
+      <div class="okr-head">
+        <div class="okr-obj">${o.obj}</div>
+        <div class="okr-pct-wrap">
+          <div class="okr-pct">progress</div>
+          <div class="okr-num" style="color:${colors[i]}">${o.pct.toFixed(1)}%</div>
+        </div>
+      </div>
+      ${o.krs.map(kr => `
+        <div class="kr-row">
+          <div class="kr-label">${kr.label}</div>
+          <div class="kr-numbers">${kr.current} / ${kr.target}</div>
+          <div class="progress-track">
+            <div class="progress-fill" style="width:${Math.min(kr.pct,100)}%;background:${colors[i]};"></div>
+          </div>
+        </div>`).join('')}
+    </div>`).join('');
+
+  // Team
+  document.getElementById('teamTable').innerHTML = `
+    <thead><tr><th>Role</th><th>Status</th><th>Since</th></tr></thead>
+    <tbody>${d.team.map(t => `
+      <tr>
+        <td>${t.role}</td>
+        <td><span class="status-pill pill-${t.status}">${t.status}</span></td>
+        <td style="color:var(--hint)">${t.since || '—'}</td>
+      </tr>`).join('')}</tbody>`;
+
+  // Milestones
+  document.getElementById('milestoneList').innerHTML = d.milestones.map(m => `
+    <div class="milestone-item">
+      <span class="m-icon m-${m.status}"></span>
+      <div>
+        <div class="m-text">${m.text}</div>
+        <div class="m-date">${m.date}</div>
+      </div>
+    </div>`).join('');
+
+  // Quarter settings
+  renderQuarterList();
+
+  // Charts (after render)
+  setTimeout(() => {
+    mkChart('growthChart','line', d.growthLabels, [{
+      label:'Total Users', data: d.growthData,
+      borderColor:'#c8a2ff', backgroundColor:'rgba(200,162,255,0.08)',
+      borderWidth:2, fill:true, tension:0.4, pointRadius:3, pointBackgroundColor:'#c8a2ff'
+    }]);
+    mkChart('subChart','doughnut', d.subLabels, [{
+      data: d.subData,
+      backgroundColor:['rgba(200,162,255,0.7)','rgba(127,212,193,0.7)','rgba(255,184,108,0.7)','rgba(255,121,198,0.7)'],
+      borderWidth:0
+    }], { legend:true });
+    mkChart('retentionChart','line', d.retentionLabels, [{
+      label:'Retention %', data: d.retentionData,
+      borderColor:'#7fd4c1', backgroundColor:'rgba(127,212,193,0.08)',
+      borderWidth:2, fill:true, tension:0.4, pointRadius:3
+    }], { yCallback: v => v+'%' });
+    mkChart('referralChart','bar', d.referralLabels, [{
+      label:'Referrals', data: d.referralData,
+      backgroundColor:'rgba(255,184,108,0.5)', borderColor:'#ffb86c', borderWidth:1, borderRadius:4
+    }]);
+    if(investor) {
+      mkChart('mrrChart','line', d.mrrLabels, [{
+        label:'MRR ($)', data: d.mrrData,
+        borderColor:'#6dcc8a', backgroundColor:'rgba(109,204,138,0.08)',
+        borderWidth:2, fill:true, tension:0.4, pointRadius:3
+      }], { yCallback: v => '$'+v.toLocaleString() });
+      mkChart('revBreakdownChart','doughnut', d.subLabels, [{
+        data: d.subData,
+        backgroundColor:['rgba(200,162,255,0.7)','rgba(127,212,193,0.7)','rgba(255,184,108,0.7)','rgba(255,121,198,0.7)'],
+        borderWidth:0
+      }], { legend:true });
+    }
+  }, 50);
+}
+</script>
+</body>
+</html>
