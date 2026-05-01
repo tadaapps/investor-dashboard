@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Ta-Da AI — Investor Dashboard</title>
+<title>Ta-Da AI — Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
@@ -261,8 +261,8 @@ footer {
 <div id="loginOverlay">
   <div class="login-box">
     <div class="login-logo">Ta-Da ✨ AI</div>
-    <div class="login-sub">Investor Dashboard · Q2 Launch Quarter</div>
-    <input type="password" id="pwInput" placeholder="Enter investor password" />
+    <div class="login-sub">  Dashboard · Q2 Launch Quarter</div>
+    <input type="password" id="pwInput" placeholder="Enter password" />
     <button onclick="tryLogin()">Access full dashboard</button>
     <div class="login-err" id="loginErr"></div>
     <div class="login-public">
@@ -274,14 +274,14 @@ footer {
 <!-- HEADER -->
 <header>
   <div style="display:flex;align-items:center;gap:8px;">
-    <div class="logo">Ta-Da ✨ AI <span>Investor Dashboard</span></div>
+    <div class="logo">Ta-Da ✨ AI <span>Dashboard</span></div>
   </div>
   <div class="header-right">
     <select class="quarter-select" id="quarterSelect" onchange="switchQuarter(this.value)">
       <option value="q2_2026">Q2 2026 — Launch Quarter</option>
     </select>
     <span class="badge badge-live">● Live</span>
-    <button class="unlock-btn" id="unlockBtn" onclick="showLogin()" style="display:none;">🔒 Investor view</button>
+    <button class="unlock-btn" id="unlockBtn" onclick="showLogin()" style="display:none;">🔒 Full view</button>
   </div>
 </header>
 
@@ -304,7 +304,7 @@ footer {
     <div class="section-desc" id="overviewDesc">Week of — · Q2 2026 Launch Quarter · May – July 2026</div>
 
     <div id="publicNotice" class="public-notice" style="display:none;">
-      You are viewing the <strong>public overview</strong>. Some metrics are available to investors only. <a onclick="showLogin()" style="color:var(--accent);cursor:pointer;text-decoration:underline;">Sign in →</a>
+      You are viewing the <strong>public overview</strong>. Some metrics are available with password only. <a onclick="showLogin()" style="color:var(--accent);cursor:pointer;text-decoration:underline;">Sign in →</a>
     </div>
 
     <div class="grid-4">
@@ -557,7 +557,7 @@ footer {
 </main>
 
 <footer>
-  Ta-Da AI · Investor Dashboard · Confidential · <span id="footerYear"></span>
+  Ta-Da AI Dashboard · Confidential · <span id="footerYear"></span>
 </footer>
 
 <script>
@@ -912,8 +912,8 @@ async function initDashboard(investor) {
   } else {
     revContent.innerHTML = `<div style="text-align:center;padding:60px 20px;">
       <div style="font-size:32px;margin-bottom:12px;">🔒</div>
-      <div style="color:var(--muted);font-size:14px;margin-bottom:16px;">Revenue details are available to investors only.</div>
-      <button class="btn-add" onclick="showLogin()">Sign in as investor</button>
+      <div style="color:var(--muted);font-size:14px;margin-bottom:16px;">Revenue details are available to authorised only.</div>
+      <button class="btn-add" onclick="showLogin()">Sign in For more</button>
     </div>`;
   }
 
